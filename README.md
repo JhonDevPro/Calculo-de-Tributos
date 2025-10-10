@@ -376,38 +376,7 @@
                 <div class="form-group">
                     <label>Trechos de pedágio:</label>
                     <div class="checkbox-group">
-                        <div class="checkbox-item">
-                            <input type="checkbox" id="rjPonte" value="rjPonte">
-                            <label for="rjPonte">RJ Ponte</label>
-                        </div>
-                        <div class="checkbox-item">
-                            <input type="checkbox" id="rjMage" value="rjMage">
-                            <label for="rjMage">RJ Mage</label>
-                        </div>
-                        <div class="checkbox-item">
-                            <input type="checkbox" id="niteroi" value="niteroi">
-                            <label for="niteroi">Niteroi</label>
-                        </div>
-                        <div class="checkbox-item">
-                            <input type="checkbox" id="rioOstras" value="rioOstras">
-                            <label for="rioOstras">Rio das Ostras</label>
-                        </div>
-                        <div class="checkbox-item">
-                            <input type="checkbox" id="macae" value="macae">
-                            <label for="macae">Macae</label>
-                        </div>
-                        <div class="checkbox-item">
-                            <input type="checkbox" id="sjBarra" value="sjBarra">
-                            <label for="sjBarra">SJ da Barra</label>
-                        </div>
-                        <div class="checkbox-item">
-                            <input type="checkbox" id="caboFrio" value="caboFrio">
-                            <label for="caboFrio">Cabo Frio</label>
-                        </div>
-                        <div class="checkbox-item">
-                            <input type="checkbox" id="angraPonte" value="angraPonte">
-                            <label for="angraPonte">Angra via Ponte</label>
-                        </div>
+                        <!-- Checkboxes serão populados via JavaScript -->
                     </div>
                 </div>
                 
@@ -540,20 +509,14 @@
                 <button id="saveTableBtn" class="save-btn" style="display:none;">Salvar</button>
                 <button id="cancelEditBtn" class="reset-btn" style="display:none;">Cancelar</button>
                 <button id="resetTableBtn" class="reset-btn">Restaurar</button>
+                <button id="addColumnBtn" class="save-btn">Adicionar Coluna</button>
             </div>
             <table id="tollTable">
                 <thead>
                     <tr>
                         <th>Veículo</th>
                         <th>Eixos</th>
-                        <th>RJ Ponte</th>
-                        <th>RJ Mage</th>
-                        <th>Niteroi</th>
-                        <th>Rio das Ostras</th>
-                        <th>Macae</th>
-                        <th>SJ da Barra</th>
-                        <th>Cabo Frio</th>
-                        <th>Angra via Ponte</th>
+                        <!-- Colunas serão populadas via JavaScript -->
                     </tr>
                 </thead>
                 <tbody>
@@ -561,7 +524,7 @@
                 </tbody>
             </table>
             <div class="note">
-                <p><strong>Instruções:</strong> Clique em "Editar" para alterar os valores dos pedágios. Após as alterações, clique em "Salvar". Use "Restaurar" para voltar aos valores originais.</p>
+                <p><strong>Instruções:</strong> Clique em "Editar" para alterar os valores dos pedágios. Após as alterações, clique em "Salvar". Use "Adicionar Coluna" para criar novas rotas extras. Use "Restaurar" para voltar aos valores originais (remove colunas extras).</p>
             </div>
         </div>
     </div>
@@ -670,24 +633,39 @@
                 }
             };
 
+            // Segmentos originais
+            const originalSegments = [
+                {key: 'rjPonte', name: 'RJ Ponte'},
+                {key: 'rjMage', name: 'RJ Mage'},
+                {key: 'niteroi', name: 'Niteroi'},
+                {key: 'rioOstras', name: 'Rio das Ostras'},
+                {key: 'macae', name: 'Macae'},
+                {key: 'sjBarra', name: 'SJ da Barra'},
+                {key: 'caboFrio', name: 'Cabo Frio'},
+                {key: 'angraPonte', name: 'Angra via Ponte'}
+            ];
+
+            // Carregar segmentos
+            let segments = loadData('segments', JSON.parse(JSON.stringify(originalSegments)));
+
             // Cópia dos dados para edição
             let tollData = loadData('tollData', JSON.parse(JSON.stringify(originalTollData)));
-            
-            // Mapeamento dos nomes dos trechos
-            const segmentNames = {
-                'rjPonte': 'RJ Ponte',
-                'rjMage': 'RJ Mage',
-                'niteroi': 'Niteroi',
-                'rioOstras': 'Rio das Ostras',
-                'macae': 'Macae',
-                'sjBarra': 'SJ da Barra',
-                'caboFrio': 'Cabo Frio',
-                'angraPonte': 'Angra via Ponte'
-            };
 
-            // Ordem das colunas na tabela
-            const columnOrder = ['rjPonte', 'rjMage', 'niteroi', 'rioOstras', 'macae', 'sjBarra', 'caboFrio', 'angraPonte'];
-            
+            // Garantir que tollData tenha todos os valores para os segmentos atuais
+            segments.forEach(seg => {
+                Object.keys(tollData).forEach(vk => {
+                    if (!tollData[vk].values[seg.key]) {
+                        tollData[vk].values[seg.key] = 0;
+                    }
+                });
+            });
+
+            // Mapeamento dinâmico dos nomes dos trechos
+            let segmentNames = {};
+            segments.forEach(s => {
+                segmentNames[s.key] = s.name;
+            });
+
             // Elementos da interface
             const calculateBtn = document.getElementById('calculateBtn');
             const selectAllBtn = document.getElementById('selectAllBtn');
@@ -696,6 +674,7 @@
             const saveTableBtn = document.getElementById('saveTableBtn');
             const cancelEditBtn = document.getElementById('cancelEditBtn');
             const resetTableBtn = document.getElementById('resetTableBtn');
+            const addColumnBtn = document.getElementById('addColumnBtn');
             const tollTable = document.getElementById('tollTable');
             
             const calculateTributBtn = document.getElementById('calculateTributBtn');
@@ -733,6 +712,7 @@
             saveTableBtn.addEventListener('click', saveTableValues);
             cancelEditBtn.addEventListener('click', cancelTableEditing);
             resetTableBtn.addEventListener('click', resetTableValues);
+            addColumnBtn.addEventListener('click', addNewColumn);
             
             calculateTributBtn.addEventListener('click', calculateTribut);
             addNfBtn.addEventListener('click', addAdditionalNf);
@@ -766,10 +746,8 @@
             document.getElementById('themeToggle').addEventListener('click', toggleTheme);
             document.getElementById('vehicleType').addEventListener('change', calculateToll);
             
-            document.querySelectorAll('.checkbox-item input').forEach(cb => {
-                cb.addEventListener('change', calculateToll);
-            });
-            
+            // Inicializar
+            populateCheckboxes();
             populateTable();
             calculateToll();
             calculateTribut();
@@ -787,6 +765,102 @@
             
             function saveData(key, value) {
                 localStorage.setItem(key, typeof value === 'string' ? value : JSON.stringify(value));
+            }
+            
+            function populateCheckboxes() {
+                const checkboxGroup = document.querySelector('.checkbox-group');
+                checkboxGroup.innerHTML = '';
+                
+                segments.forEach(seg => {
+                    const div = document.createElement('div');
+                    div.className = 'checkbox-item';
+                    div.innerHTML = `<input type="checkbox" id="${seg.key}" value="${seg.key}"><label for="${seg.key}">${seg.name}</label>`;
+                    checkboxGroup.appendChild(div);
+                });
+                
+                // Adicionar listeners para os checkboxes
+                document.querySelectorAll('.checkbox-item input').forEach(cb => {
+                    cb.addEventListener('change', calculateToll);
+                });
+            }
+            
+            function populateTable() {
+                const thead = tollTable.querySelector('thead tr');
+                
+                // Manter as duas primeiras colunas fixas (Veículo e Eixos) e limpar as demais
+                while (thead.children.length > 2) {
+                    thead.removeChild(thead.lastChild);
+                }
+                
+                // Adicionar th para cada segmento
+                segments.forEach(seg => {
+                    const th = document.createElement('th');
+                    th.textContent = seg.name;
+                    thead.appendChild(th);
+                });
+                
+                const tbody = tollTable.querySelector('tbody');
+                tbody.innerHTML = '';
+                
+                const rowOrder = ['pickup', 'sprinter', 'toco', 'truck', 'carreta5', 'carreta6', 'carreta7'];
+                
+                rowOrder.forEach(vehicleKey => {
+                    const vehicle = tollData[vehicleKey];
+                    const row = document.createElement('tr');
+                    
+                    const nameCell = document.createElement('td');
+                    nameCell.textContent = vehicle.name;
+                    row.appendChild(nameCell);
+                    
+                    const eixosCell = document.createElement('td');
+                    eixosCell.textContent = vehicle.eixos;
+                    row.appendChild(eixosCell);
+                    
+                    segments.forEach(segment => {
+                        const valueCell = document.createElement('td');
+                        valueCell.className = 'editable-cell';
+                        valueCell.dataset.vehicle = vehicleKey;
+                        valueCell.dataset.segment = segment.key;
+                        
+                        const input = document.createElement('input');
+                        input.type = 'text';
+                        const val = vehicle.values[segment.key] || 0;
+                        input.value = formatCurrencyValue(val);
+                        input.disabled = true;
+                        
+                        valueCell.appendChild(input);
+                        row.appendChild(valueCell);
+                    });
+                    
+                    tbody.appendChild(row);
+                });
+            }
+            
+            function addNewColumn() {
+                const name = prompt('Nome da nova rota:');
+                if (!name || name.trim() === '') return;
+                
+                const newKey = 'extra_' + Date.now();
+                const newSeg = {key: newKey, name: name.trim()};
+                
+                segments.push(newSeg);
+                
+                // Adicionar valor inicial 0 para todos os veículos
+                Object.keys(tollData).forEach(vk => {
+                    tollData[vk].values[newKey] = 0;
+                });
+                
+                segmentNames[newKey] = name.trim();
+                
+                // Repopular
+                populateCheckboxes();
+                populateTable();
+                
+                // Salvar
+                saveData('segments', segments);
+                saveData('tollData', tollData);
+                
+                alert('Nova coluna adicionada com sucesso!');
             }
             
             function handleNfInput(e) {
@@ -873,43 +947,6 @@
                 toggle.title = theme === 'dark' ? 'Modo claro' : 'Modo escuro';
             }
             
-            function populateTable() {
-                const tbody = tollTable.querySelector('tbody');
-                tbody.innerHTML = '';
-                
-                const rowOrder = ['pickup', 'sprinter', 'toco', 'truck', 'carreta5', 'carreta6', 'carreta7'];
-                
-                rowOrder.forEach(vehicleKey => {
-                    const vehicle = tollData[vehicleKey];
-                    const row = document.createElement('tr');
-                    
-                    const nameCell = document.createElement('td');
-                    nameCell.textContent = vehicle.name;
-                    row.appendChild(nameCell);
-                    
-                    const eixosCell = document.createElement('td');
-                    eixosCell.textContent = vehicle.eixos;
-                    row.appendChild(eixosCell);
-                    
-                    columnOrder.forEach(segmentKey => {
-                        const valueCell = document.createElement('td');
-                        valueCell.className = 'editable-cell';
-                        valueCell.dataset.vehicle = vehicleKey;
-                        valueCell.dataset.segment = segmentKey;
-                        
-                        const input = document.createElement('input');
-                        input.type = 'text';
-                        input.value = formatCurrencyValue(vehicle.values[segmentKey]);
-                        input.disabled = true;
-                        
-                        valueCell.appendChild(input);
-                        row.appendChild(valueCell);
-                    });
-                    
-                    tbody.appendChild(row);
-                });
-            }
-            
             function enableTableEditing() {
                 const inputs = tollTable.querySelectorAll('input');
                 inputs.forEach(input => {
@@ -959,9 +996,14 @@
             }
             
             function resetTableValues() {
-                if (confirm('Tem certeza que deseja restaurar os valores originais?')) {
+                if (confirm('Tem certeza que deseja restaurar os valores originais? Isso removerá colunas extras adicionadas.')) {
+                    segments = JSON.parse(JSON.stringify(originalSegments));
                     tollData = JSON.parse(JSON.stringify(originalTollData));
+                    segmentNames = {};
+                    segments.forEach(s => segmentNames[s.key] = s.name);
+                    saveData('segments', segments);
                     saveData('tollData', tollData);
+                    populateCheckboxes();
                     populateTable();
                     calculateToll();
                     alert('Valores restaurados com sucesso!');
